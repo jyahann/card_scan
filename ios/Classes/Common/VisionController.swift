@@ -114,8 +114,6 @@ public class VisionController: UIViewController {
         // setupTextRectanglesDetection()
         setupTextRecognition()
         startLiveStream()
-
-        print("[VisionController] starting")
     }
     
     public override func viewWillDisappear(_ animated: Bool) {
@@ -448,6 +446,10 @@ extension VisionController {
                     }
                 }*/
             }
+
+            DispatchQueue.main.async { [weak self] in
+                self?.highlightBox(observation.boundingBox, color: UIColor.white)
+            }
         }
     }
 }
@@ -490,10 +492,63 @@ extension VisionController {
         let outline = CALayer()
         outline.frame = CGRect(x: x, y: y, width: width, height: height)
         outline.borderWidth = 2.0
+        outline.borderColor = configuration.accentColor.cgColor
         
         previewView.layer.addSublayer(outline)
     }
+    
+    func highlightLetters(of observation: VNTextObservation) {
+        
+        guard let boxes = observation.characterBoxes else { return }
+        
+        for box in boxes {
+            highlightLetter(of: box)
+        }
+    }
+    
+    func highlightLetter(of observation: VNRectangleObservation) {
+        highlightBox(observation.boundingBox, color: UIColor.white)
+    }
+    
+    func highlightBox(_ box: CGRect, color: UIColor, lineWidth: CGFloat = 1.0, isTemporary: Bool = true) {
+        guard configuration.drawBoxes else { return }
 
+        func transform(_ box: CGRect) -> CGRect {
+            let size = previewView.frame.size
+            let roi = overlayView.regionOfInterest
+            let roiX = roi.minX * size.width
+            let roiY = roi.minY * size.height
+            let roiWidth = roi.width * size.width
+            let roiHeight = roi.height * size.height
+            let transform = CGAffineTransform.identity
+                .scaledBy(x: 1, y: -1)
+                .translatedBy(x: roiX / 2, y: -roiY - size.height / 3.5)
+                .scaledBy(x: roiWidth, y: roiHeight)
+
+
+            let transformedBox = box.applying(transform)
+            print("Box vs TransformedBox: ", box, transformedBox, size)
+
+            return transformedBox
+        }
+
+        func draw(_ box: CGRect) {
+            let outline = CALayer()
+            outline.frame = box
+            outline.borderWidth = lineWidth
+            outline.borderColor = color.cgColor
+            
+            if isTemporary {
+                previewView.layer.addSublayer(outline)
+            } else {
+                previewView.layer.sublayers?[1].addSublayer(outline)
+            }
+        }
+        
+        DispatchQueue.main.async {
+            draw(transform(box))
+        }
+    }
 }
 
 extension VisionController: AVCaptureVideoDataOutputSampleBufferDelegate {

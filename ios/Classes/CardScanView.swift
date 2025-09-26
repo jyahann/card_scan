@@ -7,7 +7,7 @@ struct CardScanView: View {
 
     var body: some View {
         CardScanner(
-            configuration: CardScanner.Configuration(bounds: bounds),
+            // configuration: CardScanner.Configuration(bounds: bounds),
         ) { cardNumber, expiryDate, holder in
             channel.invokeMethod("onCardScanned", arguments: [
                 "cardNumber": cardNumber ?? "",

@@ -24,6 +24,10 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      home: Scaffold(body: CardScan(bounds: bounds)),
+    );
+
+    return MaterialApp(
       home: Scaffold(
         body: Stack(
           children: [

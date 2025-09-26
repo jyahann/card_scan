@@ -5,35 +5,65 @@ public typealias CardScannerHandler = (_ number: String?, _ expDate: String?, _ 
 public struct CardScanner: UIViewControllerRepresentable {
 
     public struct Configuration {
-        // Основные коэффициенты
-        let bounds: CardScanBounds
+        let watermarkText: String
+        let font: UIFont
+        let accentColor: UIColor
+        let watermarkWidth: CGFloat
+        let watermarkHeight: CGFloat
+        let drawBoxes: Bool
+        let localizedCancelButton: String
+        let localizedDoneButton: String
 
-        init(
-            bounds: CardScanBounds,
+        public init(
+            watermarkText: String,
+            font: UIFont,
+            accentColor: UIColor,
+            watermarkWidth: CGFloat,
+            watermarkHeight: CGFloat,
+            drawBoxes: Bool,
+            localizedCancelButton: String,
+            localizedDoneButton: String
         ) {
-            self.bounds = bounds
+            self.watermarkText = watermarkText
+            self.font = font
+            self.accentColor = accentColor
+            self.watermarkWidth = watermarkWidth
+            self.watermarkHeight = watermarkHeight
+            self.drawBoxes = drawBoxes
+            self.localizedCancelButton = localizedCancelButton
+            self.localizedDoneButton = localizedDoneButton
         }
 
-        // Дефолтная конфигурация
         public static let `default` = Configuration(
-            bounds: CardScanBounds(
-                left: 0.15, top: 0.35, right: 0.15, bottom: 0.35
-            )
+            watermarkText: "Card_Scanner",
+            font: .systemFont(ofSize: 24),
+            accentColor: .white,
+            watermarkWidth: 150,
+            watermarkHeight: 50,
+            drawBoxes: false,
+            localizedCancelButton: "Cancel",
+            localizedDoneButton: "Done"
         )
     }
     
     // MARK: - Environment
     @Environment(\.presentationMode) var presentationMode
     
+    private let firstNameSuggestion: String
+    private let lastNameSuggestion: String
     private let configuration: Configuration
     
     // MARK: - Actions
     let onCardScanned: CardScannerHandler
     
     public init(
+        firstNameSuggestion: String = "",
+        lastNameSuggestion: String = "",
         configuration: Configuration = .default,
         onCardScanned: @escaping CardScannerHandler = { _, _, _ in }
     ) {
+        self.firstNameSuggestion = firstNameSuggestion
+        self.lastNameSuggestion = lastNameSuggestion
         self.configuration = configuration
         self.onCardScanned = onCardScanned
     }
@@ -44,6 +74,8 @@ public struct CardScanner: UIViewControllerRepresentable {
    
     public func makeUIViewController(context: Context) -> CardScannerController {
         let scanner = CardScannerController(configuration: configuration)
+        scanner.firstNameSuggestion = firstNameSuggestion
+        scanner.lastNameSuggestion = lastNameSuggestion
         scanner.delegate = context.coordinator
         return scanner
     }
@@ -58,6 +90,21 @@ public struct CardScanner: UIViewControllerRepresentable {
             self.parent = parent
         }
         
+        func didTapCancel() {
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        func didTapDone(number: String?, expDate: String?, holder: String?) {
+            parent.presentationMode.wrappedValue.dismiss()
+            parent.onCardScanned(number, expDate, holder)
+        }
+        
         func didScanCard(number: String?, expDate: String?, holder: String?) { }
+    }
+}
+
+struct CardScanner_Previews: PreviewProvider {
+    static var previews: some View {
+        CardScanner()
     }
 }
