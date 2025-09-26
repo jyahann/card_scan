@@ -5,44 +5,20 @@ public typealias CardScannerHandler = (_ number: String?, _ expDate: String?, _ 
 public struct CardScanner: UIViewControllerRepresentable {
 
     public struct Configuration {
-        let watermarkText: String
-        let font: UIFont
-        let accentColor: UIColor
-        let watermarkWidth: CGFloat
-        let watermarkHeight: CGFloat
+        let bounds: CardScanBounds
         let drawBoxes: Bool
-        let localizedCancelButton: String
-        let localizedDoneButton: String
 
-        public init(
-            watermarkText: String,
-            font: UIFont,
-            accentColor: UIColor,
-            watermarkWidth: CGFloat,
-            watermarkHeight: CGFloat,
-            drawBoxes: Bool,
-            localizedCancelButton: String,
-            localizedDoneButton: String
+        init(
+            bounds: CardScanBounds,
+            drawBoxes: Bool
         ) {
-            self.watermarkText = watermarkText
-            self.font = font
-            self.accentColor = accentColor
-            self.watermarkWidth = watermarkWidth
-            self.watermarkHeight = watermarkHeight
+            self.bounds = bounds
             self.drawBoxes = drawBoxes
-            self.localizedCancelButton = localizedCancelButton
-            self.localizedDoneButton = localizedDoneButton
         }
 
         public static let `default` = Configuration(
-            watermarkText: "Card_Scanner",
-            font: .systemFont(ofSize: 24),
-            accentColor: .white,
-            watermarkWidth: 150,
-            watermarkHeight: 50,
-            drawBoxes: false,
-            localizedCancelButton: "Cancel",
-            localizedDoneButton: "Done"
+            bounds: CardScanBounds(left: 0.2, top: 0.3, right: 0.2, bottom: 0.3),
+            drawBoxes: false
         )
     }
     

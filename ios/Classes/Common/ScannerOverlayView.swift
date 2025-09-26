@@ -30,12 +30,6 @@ class ScannerOverlayView: UIView {
         return layer
     }()
     
-    // MARK: - Region of interest (ROI) - Static!
-    var desiredHeightRatio: Double { 0.5 }
-    var desiredWidthRatio: Double { 0.6 }
-    var maxPortraitWidth: Double { 0.8 }
-    var minLandscapeHeightRatio: Double { 0.6 }
-    
     // Region of video data output buffer that recognition should be run on.
     // Gets recalculated once the bounds of the preview layer are known.
     var regionOfInterest = CGRect(x: 0, y: 0, width: 1, height: 1)
@@ -85,36 +79,21 @@ extension ScannerOverlayView {
         }
     }
     
-    // IMPORTANT!
-    // This function calculates FIXED REGION OF INTEREST based on
-    // desired width/height of region of interest and center it on the screen
-    // with little adjustment for landscape and portrait
-    // To specify dynamic region of interest override this function
-    // and calculate region of interest based on other detected rectangle
-    // rather than on predefined width/height constant ratios.
     @objc open func calculateRegionOfInterest() {
+        let left = configuration.bounds.left
+        let top = configuration.bounds.top
+        let right = configuration.bounds.right
+        let bottom = configuration.bounds.bottom
         
-        // In landscape orientation the desired ROI is specified as the ratio of
-        // buffer width to height. When the UI is rotated to landscape try to keep the
-        // vertical size the same up to a minimum ratio. When the UI is rotated to
-        // portrait try to keep the horizontal size the same up to a maximum ratio.
+        // так как это проценты, ROI сразу в нормализованных координатах (0..1)
+        regionOfInterest = CGRect(
+            x: left,
+            y: top,
+            width: 1.0 - left - right,
+            height: 1.0 - top - bottom
+        )
         
-        // Figure out size of ROI.
-        let size: CGSize
-        if currentOrientation.isPortrait || currentOrientation == .unknown {
-            size = CGSize(
-                width: min(desiredWidthRatio * bufferAspectRatio, maxPortraitWidth),
-                height: desiredHeightRatio / bufferAspectRatio
-            )
-        } else {
-            size = CGSize(width: desiredWidthRatio, height: max(desiredHeightRatio, minLandscapeHeightRatio))
-        }
-        
-        // Make it centered.
-        regionOfInterest.origin = CGPoint(x: (1 - size.width) / 2, y: (1 - size.height) / 2)
-        regionOfInterest.size = size
-        
-        print("Region of interest: \(regionOfInterest)")
+        print("ROI updated: \(regionOfInterest)")
     }
     
     func setupOrientationAndTransform() {
@@ -166,53 +145,5 @@ extension ScannerOverlayView {
         //addWatermark()
         
         // override to add additional layers on overlay
-    }
-}
-
-// MARK: - Custom Layers
-extension ScannerOverlayView {
-    
-    func addRoundedRectangle(around cutout: CGRect) {
-        
-        print("Cutout: \(cutout)")
-        guard cutout.size != .zero else { return }
-        
-        let cornersPath = UIBezierPath(rect: CGRect(x: cutout.minX - 3, y: cutout.minY - 3, width: 60, height: 60))
-        cornersPath.append(UIBezierPath(rect: CGRect(x: cutout.maxX - 57, y: cutout.minY - 3, width: 60, height: 60)))
-        cornersPath.append(UIBezierPath(rect: CGRect(x: cutout.minX - 3, y: cutout.maxY - 57, width: 60, height: 60)))
-        cornersPath.append(UIBezierPath(rect: CGRect(x: cutout.maxX - 57, y: cutout.maxY - 57, width: 60, height: 60)))
-        let cornersMask = CAShapeLayer()
-        cornersMask.lineWidth = 8
-        cornersMask.strokeColor = UIColor.white.cgColor
-        cornersMask.path = cornersPath.cgPath
-        cornersMask.fillColor = UIColor.white.cgColor
-        cornersMask.fillRule = .nonZero
-        
-        let roundedRect = CAShapeLayer()
-        roundedRect.strokeColor = configuration.accentColor.cgColor
-        roundedRect.lineWidth = 6
-        roundedRect.path = UIBezierPath(roundedRect: cutout.insetBy(dx: -3, dy: -3), cornerRadius: 10).cgPath
-        roundedRect.fillColor = UIColor.clear.cgColor
-        roundedRect.mask = cornersMask // remove here to have rounded rect instead of rounded corners
-        layer.addSublayer(roundedRect)
-    }
-    
-    func addWatermark() {
-
-        let watermark = CATextLayer()
-        watermark.string = configuration.watermarkText
-        watermark.foregroundColor = configuration.accentColor.cgColor
-        watermark.isWrapped = true
-        watermark.alignmentMode = .left
-        watermark.contentsScale = UIScreen.main.scale
-        watermark.font = CTFontCreateWithName(configuration.font.fontName as CFString, configuration.font.pointSize, nil)
-        watermark.fontSize = configuration.font.pointSize
-        watermark.frame = CGRect(
-            x: frame.width - configuration.watermarkWidth,
-            y: frame.height - 50,
-            width: configuration.watermarkWidth,
-            height: 40
-        )
-        layer.addSublayer(watermark)
     }
 }

@@ -65,7 +65,7 @@ public class CardScannerController : VisionController {
         let button = UIButton()
         button.addTarget(self, action: #selector(doneButtonAction), for: .touchUpInside)
         button.titleLabel?.font = .boldSystemFont(ofSize: 20)
-        button.setTitle(configuration.localizedCancelButton, for: .normal)
+        //button.setTitle(configuration.localizedCancelButton, for: .normal)
         button.setTitleColor(UIColor.white, for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
@@ -87,12 +87,12 @@ public class CardScannerController : VisionController {
     }
 
     @objc func doneButtonAction() {
-        if button.title(for: .normal) == configuration.localizedCancelButton {
-            stopLiveStream()
-            delegate?.didTapCancel()
-        } else {
-            delegate?.didTapDone(number: foundNumber, expDate: foundExpDate, holder: foundCardHolder)
-        }
+//        if button.title(for: .normal) == configuration.localizedCancelButton {
+//            stopLiveStream()
+//            delegate?.didTapCancel()
+//        } else {
+//            delegate?.didTapDone(number: foundNumber, expDate: foundExpDate, holder: foundCardHolder)
+//        }
     }
     
     func setupLabels() {
@@ -194,7 +194,7 @@ public class CardScannerController : VisionController {
             showString(string: brand, in: brandLabel)
             
             if let box = numberTracker.getStableBox() {
-                highlightBox(box, color: configuration.accentColor, lineWidth: 2, isTemporary: false)
+                //highlightBox(box, color: configuration.accentColor, lineWidth: 2, isTemporary: false)
             }
             
             numberTracker.reset(string: sureNumber)
@@ -212,7 +212,7 @@ public class CardScannerController : VisionController {
             showString(string: sureExpDate, in: expDateLabel)
             
             if let box = expDateTracker.getStableBox() {
-                highlightBox(box, color: configuration.accentColor, lineWidth: 2, isTemporary: false)
+                //highlightBox(box, color: configuration.accentColor, lineWidth: 2, isTemporary: false)
             }
             
             expDateTracker.reset(string: sureExpDate)
@@ -283,7 +283,7 @@ public class CardScannerController : VisionController {
         
         DispatchQueue.main.async { [weak self] in
             guard let strongSelf = self else { return }
-            strongSelf.button.setTitle(strongSelf.configuration.localizedDoneButton, for: .normal)
+            //strongSelf.button.setTitle(strongSelf.configuration.localizedDoneButton, for: .normal)
             strongSelf.previewView.layer.sublayers?.removeSubrange(2...)
         }
     }

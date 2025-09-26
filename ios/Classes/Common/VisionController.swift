@@ -492,7 +492,7 @@ extension VisionController {
         let outline = CALayer()
         outline.frame = CGRect(x: x, y: y, width: width, height: height)
         outline.borderWidth = 2.0
-        outline.borderColor = configuration.accentColor.cgColor
+        //outline.borderColor = configuration.accentColor.cgColor
         
         previewView.layer.addSublayer(outline)
     }
