@@ -10,7 +10,7 @@ public struct CardScanner: UIViewControllerRepresentable {
 
         init(
             bounds: CardScanBounds,
-            drawBoxes: Bool
+            drawBoxes: Bool = false
         ) {
             self.bounds = bounds
             self.drawBoxes = drawBoxes
@@ -75,12 +75,8 @@ public struct CardScanner: UIViewControllerRepresentable {
             parent.onCardScanned(number, expDate, holder)
         }
         
-        func didScanCard(number: String?, expDate: String?, holder: String?) { }
-    }
-}
-
-struct CardScanner_Previews: PreviewProvider {
-    static var previews: some View {
-        CardScanner()
+        func didScanCard(number: String?, expDate: String?, holder: String?) {
+            parent.onCardScanned(number, expDate, holder)
+        }
     }
 }

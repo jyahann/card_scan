@@ -4,7 +4,7 @@ typealias StringRecognition = (text: String, rect: CGRect?)
 
 class StringTracker {
     
-    private static let Threshold = 3
+    private static let Threshold = 2
     
     var frameIndex: Int64 = 0
 
@@ -100,5 +100,43 @@ class StringTracker {
         bestCount = 0
         bestString = ""
         bestBox = nil
+    }
+    
+    /// Строит "лучшую" строку:
+    /// 1. Находит самую частую длину среди строк.
+    /// 2. Для каждой позиции берёт наиболее частый символ.
+    func getConsensusString() -> String? {
+        guard !seenStrings.isEmpty else { return nil }
+        
+        // 1. Найдём наиболее частую длину строки
+        let lengthCounts = seenStrings.keys.reduce(into: [Int: Int]()) { counts, str in
+            counts[str.count, default: 0] += 1
+        }
+        
+        guard let mostCommonLength = lengthCounts.max(by: { $0.value < $1.value })?.key else {
+            return nil
+        }
+        
+        // 2. Отфильтруем строки этой длины
+        let candidateStrings = seenStrings.keys.filter { $0.count == mostCommonLength }
+        guard !candidateStrings.isEmpty else { return nil }
+        
+        // 3. Для каждой позиции выбираем наиболее частый символ
+        var consensusChars: [Character] = []
+        
+        for i in 0..<mostCommonLength {
+            var charFreq: [Character: Int] = [:]
+            
+            for str in candidateStrings {
+                let char = str[str.index(str.startIndex, offsetBy: i)]
+                charFreq[char, default: 0] += 1
+            }
+            
+            if let bestChar = charFreq.max(by: { $0.value < $1.value })?.key {
+                consensusChars.append(bestChar)
+            }
+        }
+        
+        return String(consensusChars)
     }
 }

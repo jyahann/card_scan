@@ -27,7 +27,7 @@ extension String {
         }
         
         let potentialNumber = String(self[range])
-
+        
         let cardValidator = CardValidator()
         guard
             cardValidator.validationType(from: potentialNumber) != nil,
@@ -126,70 +126,35 @@ extension String {
         return result
     }
     
-    func extractCardHolder2() -> String? {
-        
-        print("Card Holder extracting: \(self)")
-        
-        let brands = [
-            "American Express", "Diners Club", "Discover", "JCB", "Mastercard", "UnionPay",
-            "Visa", "Debit", "Credit", "Card", "Bank", "Valid", "Thru", "Good", "Month", "Year", "Business",
+    func extractCardHolderSimple() -> String? {
+        // список слов, которые часто встречаются на карте, но не относятся к имени
+        let blacklist = [
+            "American", "Express", "Diners", "Club", "Discover", "JCB", "Mastercard",
+            "UnionPay", "VALID", "THRU", "KASPI", "GOLD",
+            "VISA", "DEBIT", "CREDIT", "CARD", "BANK",
+            "VALID", "THRU", "GOOD", "MONTH", "YEAR", "BUSINESS"
         ]
-        let brandsRegex = brands.joined(separator: "|")
         
-        // - removing card number digits, exp date digits and "/" character
-        // as this breaks NSLinguisticTagger from classifying names correctly
-        // - remove card brands
-        // - remove excessive whitespaces
-        var text = components(separatedBy: CharacterSet.decimalDigits).joined()
-        text = text.replacingOccurrences(of: brandsRegex, with: "", options: [.caseInsensitive, .regularExpression])
-        text = text.replacingOccurrences(of: "  ", with: " ")
+        // убираем цифры, спецсимволы и "черные слова"
+        var cleaned = self.uppercased()
+        cleaned = cleaned.components(separatedBy: CharacterSet.decimalDigits).joined()
+        cleaned = cleaned.components(separatedBy: CharacterSet(charactersIn: "/")).joined()
         
-        let range = text.startIndex..<text.endIndex
-        
-        let tagger = NLTagger(tagSchemes: [.nameType])
-        tagger.string = text
-        tagger.setLanguage(.english, range: range)
-        
-        var personalNames = [String]()
-        
-        // personalName
-        let options : NLTagger.Options = [.omitPunctuation, .omitWhitespace, .omitOther, .joinNames]
-        let foundTags = tagger.tags(in: range, unit: .word, scheme: .nameType, options: options)
-        
-        foundTags.forEach { tag, tokenRange in
-            if tag == .personalName {
-                let name = text[tokenRange]
-                personalNames.append(String(name))
-            }
+        blacklist.forEach { word in
+            cleaned = cleaned.replacingOccurrences(of: word.uppercased(), with: "")
         }
         
-        print("Dominant Language: \(tagger.dominantLanguage.debugDescription)")
-        print("Full name: \(personalNames.first ?? "nil")")
+        // убираем лишние пробелы
+        let parts = cleaned
+            .split(separator: " ")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
         
-        if personalNames.count > 1 {
-            return personalNames.joined(separator: " ")
-        }
+        guard parts.count >= 2 else { return nil }
         
-        if let name = personalNames.first {
-            let components = name.components(separatedBy: .whitespaces)
-            if components.count > 1 {
-                return name
-            } else {
-                let words = text.components(separatedBy: .whitespaces)
-                if let idx = words.firstIndex(where: { $0 == name }), words.count > (idx + 1) {
-                    let last = words[idx + 1]
-                    let secondNextIndex = idx + 2
-                    // some how swift had an issue with `(idx + 2)` but `idx + 2` was working fine. So moved `(idx + 2)` in a constant
-                    if last.count < 3, words.count > secondNextIndex {
-                        return "\(name) \(words[idx + 1]) \(words[idx + 2])"
-                    } else {
-                        return "\(name) \(words[idx + 1])"
-                    }
-                }
-            }
-        }
-        
-        return personalNames.first
+        let firstName = parts[0].capitalized
+        let lastName = parts[1].capitalized
+        return "\(firstName) \(lastName)"
     }
     
     func extractCardHolder() -> String? {
@@ -211,7 +176,7 @@ extension String {
         text = text.replacingOccurrences(of: "  ", with: " ")
         
         let range = NSRange(location: 0, length: text.utf16.count)
-    
+        
         let tagger = NSLinguisticTagger(tagSchemes: [.nameType], options: 0)
         tagger.string = text
         tagger.setOrthography(NSOrthography.defaultOrthography(forLanguage: "en-US"), range: range)
@@ -222,15 +187,15 @@ extension String {
         var personalNames = [String]()
         
         /*
-        // this is asynchronous, we prefere to retrieve classification tags synchronously
-        tagger.enumerateTags(in: range, unit: .word, scheme: .nameType, options: options) { (tag, tokenRange, stop) in
-            if let tag = tag, tags.contains(tag) {
-                if let range = Range(tokenRange, in: text) {
-                    let name = text[range]
-                    print("Name: \(name): \(tag)")
-                }
-            }
-        }*/
+         // this is asynchronous, we prefere to retrieve classification tags synchronously
+         tagger.enumerateTags(in: range, unit: .word, scheme: .nameType, options: options) { (tag, tokenRange, stop) in
+         if let tag = tag, tags.contains(tag) {
+         if let range = Range(tokenRange, in: text) {
+         let name = text[range]
+         print("Name: \(name): \(tag)")
+         }
+         }
+         }*/
         
         var tokenRanges: NSArray?
         let foundTags = tagger.tags(in: range, unit: .word, scheme: .nameType, options: options, tokenRanges: &tokenRanges)

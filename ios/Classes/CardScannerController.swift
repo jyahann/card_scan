@@ -19,57 +19,6 @@ public class CardScannerController : VisionController {
     override var overlayViewClass: ScannerOverlayView.Type {
         return CardOverlayView.self
     }
-    
-    // MARK: - Views
-    lazy var cardNumberLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.text = ""
-        label.font = .systemFont(ofSize: 20)
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    lazy var brandLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.text = ""
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    lazy var expDateLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.text = ""
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    lazy var cardHolderLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.text = ""
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    lazy var button: UIButton = {
-        let button = UIButton()
-        button.addTarget(self, action: #selector(doneButtonAction), for: .touchUpInside)
-        button.titleLabel?.font = .boldSystemFont(ofSize: 20)
-        //button.setTitle(configuration.localizedCancelButton, for: .normal)
-        button.setTitleColor(UIColor.white, for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
 
     override init(configuration: CardScanner.Configuration) {
         super.init(configuration: configuration)
@@ -82,38 +31,9 @@ public class CardScannerController : VisionController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        setupLabels()
-        setupButton()
-    }
-
-    @objc func doneButtonAction() {
-//        if button.title(for: .normal) == configuration.localizedCancelButton {
-//            stopLiveStream()
-//            delegate?.didTapCancel()
-//        } else {
-//            delegate?.didTapDone(number: foundNumber, expDate: foundExpDate, holder: foundCardHolder)
-//        }
-    }
-    
-    func setupLabels() {
         
-        let stack = UIStackView(arrangedSubviews: [cardNumberLabel, brandLabel, expDateLabel, cardHolderLabel])
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.axis = .vertical
-        stack.alignment = .leading
-       
-        view.addSubview(stack)
-        // constraint labels
-        stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20).isActive = true
-        stack.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16).isActive = true
     }
     
-    func setupButton() {
-        view.addSubview(button)
-        // constraint button
-        button.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20).isActive = true
-        button.topAnchor.constraint(equalTo: view.topAnchor, constant: 10).isActive = true
-    }
     
     override var usesLanguageCorrection: Bool {
         return true
@@ -143,10 +63,12 @@ public class CardScannerController : VisionController {
         
         // Create a full transcript to run analysis on.
         var text : String = ""
+        var cardHolderCandidate : String = ""
         
         if observationsCount == 20 && (foundNumber == nil) && cameraBrightness < 0 {
             // toggleTorch(on: true)
         }
+        
         
         let maximumCandidates = 1
         for observation in observations {
@@ -158,10 +80,14 @@ public class CardScannerController : VisionController {
                 let box = observation.boundingBox
                 numbers.append((cardNumber, box))
             }
-            if foundExpDate == nil, let expDate = candidate.string.extractExpDate() {
+            if let expDate = candidate.string.extractExpDate() {
                 let box = boundingBox(of: expDate, in: candidate)
                 expDates.append((expDate, box))
+            } else if expDates.count > 0 {
+                cardHolderCandidate += candidate.string + " "
             }
+            
+            
             
             text += candidate.string + " "
 
@@ -173,8 +99,12 @@ public class CardScannerController : VisionController {
         }
        
         searchCardNumber(numbers)
-        searchExpDate(expDates)
-        searchCardHolder(text)
+        if foundExpDate == nil {
+            searchExpDate(expDates)
+        }
+        
+        print("CARD HOLDER CANDIDATE: \(cardHolderCandidate)")
+        searchCardHolder(cardHolderCandidate)
         
         shouldStopScanner()
     }
@@ -187,15 +117,9 @@ public class CardScannerController : VisionController {
         if let sureNumber = numberTracker.getStableString() {
             foundNumber = sureNumber
             
-            showString(string: sureNumber, in: cardNumberLabel)
             
             let cardType = CardValidator().validationType(from: sureNumber)
             let brand = cardType?.group.rawValue ?? ""
-            showString(string: brand, in: brandLabel)
-            
-            if let box = numberTracker.getStableBox() {
-                //highlightBox(box, color: configuration.accentColor, lineWidth: 2, isTemporary: false)
-            }
             
             numberTracker.reset(string: sureNumber)
         }
@@ -208,12 +132,6 @@ public class CardScannerController : VisionController {
         
         if let sureExpDate = expDateTracker.getStableString() {
             foundExpDate = sureExpDate
-            
-            showString(string: sureExpDate, in: expDateLabel)
-            
-            if let box = expDateTracker.getStableBox() {
-                //highlightBox(box, color: configuration.accentColor, lineWidth: 2, isTemporary: false)
-            }
             
             expDateTracker.reset(string: sureExpDate)
         }
@@ -229,28 +147,14 @@ public class CardScannerController : VisionController {
             if let sureFullName = fullNameTracker.getStableString() {
                 foundCardHolder = sureFullName
                 
-                showString(string: sureFullName, in: cardHolderLabel)
-                
                 fullNameTracker.reset(string: sureFullName)
             }
         }
         
-        if let fullName = text.extractCardHolder2() {
+        if let fullName = text.extractCardHolderSimple() {
             trackFullName((fullName, nil))
         } else if let fullName = text.checkFullName(firstName: firstNameSuggestion, lastName: lastNameSuggestion) {
             trackFullName((fullName, nil))
-        }
-    }
-    
-    private func showString(string: String, in label: UILabel) {
-        DispatchQueue.main.async {
-            label.text = "\(string)"
-        }
-    }
-    
-    private func showString(string: NSAttributedString, in label: UILabel) {
-        DispatchQueue.main.async {
-            label.attributedText = string
         }
     }
     
@@ -259,7 +163,7 @@ public class CardScannerController : VisionController {
     
     private func shouldStopScanner() {
         
-        if foundNumber != nil && ((foundExpDate != nil && foundCardHolder != nil) || (observationsCount > 50) ) {
+        if foundNumber != nil && ((foundExpDate != nil && foundCardHolder != nil) || (observationsCount > 4) ) {
             
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             
@@ -268,9 +172,9 @@ public class CardScannerController : VisionController {
             DispatchQueue.main.async { [weak self] in
                 guard let strongSelf = self else { return }
                 strongSelf.delegate?.didScanCard(
-                    number: strongSelf.foundNumber,
-                    expDate: strongSelf.foundExpDate,
-                    holder: strongSelf.foundCardHolder
+                    number: strongSelf.foundNumber ?? strongSelf.numberTracker.getConsensusString(),
+                    expDate: strongSelf.foundExpDate ?? strongSelf.expDateTracker.getConsensusString(),
+                    holder: strongSelf.foundCardHolder ?? strongSelf.fullNameTracker.getConsensusString()
                 )
             }
         }
@@ -283,7 +187,6 @@ public class CardScannerController : VisionController {
         
         DispatchQueue.main.async { [weak self] in
             guard let strongSelf = self else { return }
-            //strongSelf.button.setTitle(strongSelf.configuration.localizedDoneButton, for: .normal)
             strongSelf.previewView.layer.sublayers?.removeSubrange(2...)
         }
     }

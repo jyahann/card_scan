@@ -63,33 +63,40 @@ class CardScanPlatformView: NSObject, FlutterPlatformView {
     }
 
     private func createNativeView(frame: CGRect, args: Any?) {
-        // Создаём SwiftUI вью — можно прокинуть сюда args, callbacks и т.п.
+        // Берём topController (самый верхний VC, а не просто root)
+        let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
+        var topController = keyWindow?.rootViewController
+        while let presented = topController?.presentedViewController {
+            topController = presented
+        }
+
+        // Создаём SwiftUI-вью
         let swiftUIView = CardScanView(
             bounds: bounds,
             channel: channel
         )
-        
+
         // Оборачиваем в UIHostingController
         let host = UIHostingController(rootView: swiftUIView)
-        hostingController = host // удерживаем, чтобы не деаллоцировался
-        
+        hostingController = host
+
         // Настраиваем view hosting'а
         host.view.frame = containerView.bounds
         host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         host.view.backgroundColor = .clear
-        
+
         // Добавляем как сабвью
         containerView.addSubview(host.view)
-        
-        // Опционально: прикрепим hosting controller к rootViewController
-        // чтобы корректно работал lifecycle (present, sheet и т.д.)
-        if let root = UIApplication.shared.delegate?.window??.rootViewController {
-            root.addChild(host)
-            host.didMove(toParent: root)
-        } else if let root = UIApplication.shared.windows.first?.rootViewController {
-            // fallback для Scene-based приложений
-            root.addChild(host)
-            host.didMove(toParent: root)
+
+        // Подвязываем к topController
+        if let parent = topController {
+            parent.addChild(host)
+            host.didMove(toParent: parent)
+        } else {
+            assertionFailure("❌ Не удалось найти topController для UIHostingController")
         }
     }
 }

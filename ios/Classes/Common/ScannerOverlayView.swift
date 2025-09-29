@@ -72,11 +72,11 @@ extension ScannerOverlayView {
         setupOrientationAndTransform()
         
         // Update the cutout to match the new ROI.
-        DispatchQueue.main.async { [weak self] in
-            // Wait for the next run cycle before updating the cutout. This
-            // ensures that the preview layer already has its new orientation.
-            self?.updateCutout()
-        }
+        // DispatchQueue.main.async { [weak self] in
+        //     // Wait for the next run cycle before updating the cutout. This
+        //     // ensures that the preview layer already has its new orientation.
+        //     self?.updateCutout()
+        // }
     }
     
     @objc open func calculateRegionOfInterest() {
@@ -123,21 +123,6 @@ extension ScannerOverlayView {
         visionToAVFTransform = roiToGlobalTransform.concatenating(bottomToTopTransform).concatenating(uiRotationTransform)
     }
     
-    @objc func updateCutout() {
-        
-        // Figure out where the cutout ends up in layer coordinates.
-        let roiRectTransform = bottomToTopTransform.concatenating(uiRotationTransform)
-        let transformedRoi = regionOfInterest.applying(roiRectTransform)
-        guard let cutout = previewView?.previewLayer.layerRectConverted(fromMetadataOutputRect: transformedRoi) else { return }
-        
-        // Create the mask.
-        let path = UIBezierPath(rect: frame)
-        path.append(UIBezierPath(roundedRect: cutout, cornerRadius: 10))
-        maskLayer.path = path.cgPath
-        
-        layer.sublayers?.removeAll()
-        addOverlays(cutout)
-    }
     
     @objc open func addOverlays(_ cutout: CGRect) {
         
