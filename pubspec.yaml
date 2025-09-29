@@ -21,7 +21,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.card.scan
+        package: com.jyahann.card_scan
         pluginClass: CardScanPlugin
       ios:
         pluginClass: CardScanPlugin

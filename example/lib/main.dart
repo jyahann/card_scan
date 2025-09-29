@@ -22,7 +22,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _openScanner() async {
     if (Platform.isAndroid) {
-      final result = await GoogleCardScanner.scan();
+      final result = await GoogleCardScanner.scan(testEnvironment: true);
       if (result is CardScannedEvent) {
         setState(() {
           _lastEvent = result;

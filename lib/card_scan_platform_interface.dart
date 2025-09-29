@@ -26,7 +26,7 @@ abstract class CardScanPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  void startGoogleScanner();
+  void startGoogleScanner(bool isTest);
 
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');

@@ -13,6 +13,8 @@ class MethodChannelCardScan extends CardScanPlatform {
   @visibleForTesting
   final methodChannel = const MethodChannel('jyahann:card_scan_channel');
 
+  bool _isCallHandlerInitialized = false;
+
   @override
   Future<String?> getPlatformVersion() async {
     final version = await methodChannel.invokeMethod<String>(
@@ -27,6 +29,8 @@ class MethodChannelCardScan extends CardScanPlatform {
 
   @override
   void initCallHandler() {
+    if (_isCallHandlerInitialized) return;
+    _isCallHandlerInitialized = true;
     methodChannel.setMethodCallHandler((call) async {
       final event = CardScanEvent.fromMap(call.arguments);
       _eventController.add(event);
@@ -34,7 +38,7 @@ class MethodChannelCardScan extends CardScanPlatform {
   }
 
   @override
-  void startGoogleScanner() {
-    methodChannel.invokeMapMethod('startScan');
+  void startGoogleScanner(bool isTest) {
+    methodChannel.invokeMapMethod('startScan', {'isTest': isTest});
   }
 }

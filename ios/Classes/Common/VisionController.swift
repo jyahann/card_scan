@@ -104,7 +104,7 @@ public class VisionController: UIViewController {
         // setupImageView()
         setupPreviewView()
         setupOverlayView()
-        setupTorchButton()
+        //setupTorchButton()
     }
     
     public override func viewWillAppear(_ animated: Bool) {

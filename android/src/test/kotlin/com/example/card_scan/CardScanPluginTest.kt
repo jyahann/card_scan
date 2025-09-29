@@ -1,4 +1,4 @@
-package com.example.card_scan
+package com.jyahann.card_scan
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
