@@ -17,7 +17,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  card_scan: ^1.0.0
+  card_scan: ^1.0.1
 ```
 
 ---
