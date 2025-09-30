@@ -1,15 +1,86 @@
-# card_scan
+# 📱 Card Scan Flutter Plugin
 
-A new Flutter plugin project.
+Flutter plugin for **scanning credit/debit cards** directly in your app.  
+Supports **Android** (Google Pay OCR API) and **iOS** (native SwiftUI scanner).
 
-## Getting Started
+## 🚀 Features
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/to/develop-plugins),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+- Scan card number with camera
+- Recognize expiration date
+- Capture cardholder name (iOS only)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
 
+## 📦 Installation
+
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  card_scan: ^1.0.0
+```
+
+---
+
+## ⚙️ Setup
+
+### Android
+
+- Minimum `minSdkVersion`: **24**
+- Connect Google Pay API for test or production
+- Ensure Google account signed in on device
+
+### iOS
+
+- Minimum iOS version: **14.0**
+- Add camera permission in `Info.plist`:
+
+```xml
+<key>NSCameraUsageDescription</key>
+<string>We need camera access to scan your card</string>
+```
+
+---
+
+## 🔥 Usage
+
+```dart
+import 'dart:io';
+import 'package:card_scan/card_scan.dart';
+
+// Android example
+if (Platform.isAndroid) {
+  final result = await GoogleCardScanner.scan(testEnvironment: true);
+  print(result?.number);
+}
+
+// iOS example
+Stack(
+  children: [
+    /// Camera + scanner
+    Positioned.fill(
+      child: CardScan(
+        bounds: bounds,
+        onScanned: (event) {
+          if (!isProcessed) {
+            isProcessed = true;
+            Navigator.of(context).pop(event); // return event
+          }
+        },
+      ),
+    ),
+  ],
+)
+
+```
+
+- `GoogleCardScanner.scan()` — Android OCR using Google Pay
+- `CardScannerModal` — iOS SwiftUI scanner modal
+
+---
+
+## 🧪 Notes
+
+- Android OCR requires a signed-in Google account and production access to Google Pay API.
+- Use `testEnvironment: true` for test cards.
+- iOS scanning works offline.

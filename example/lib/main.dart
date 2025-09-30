@@ -1,8 +1,5 @@
 import 'dart:io';
 
-import 'package:card_scan/google_card_scanner.dart';
-import 'package:card_scan/types/bounds.dart';
-import 'package:card_scan/types/events.dart';
 import 'package:flutter/material.dart';
 import 'package:card_scan/card_scan.dart';
 
@@ -56,18 +53,18 @@ class _MyAppState extends State<MyApp> {
           children: [
             ElevatedButton(
               onPressed: _openScanner,
-              child: const Text('Сканировать карту'),
+              child: const Text('Scan card'),
             ),
             const SizedBox(height: 20),
             if (_lastEvent != null)
               Text(
-                'Карта: ${_lastEvent!.number}\n'
-                'Дата: ${_lastEvent!.expDate}\n'
-                'Владелец: ${_lastEvent!.holder}',
+                'CardNumber: ${_lastEvent!.number}\n'
+                'ExpDate: ${_lastEvent!.expDate}\n'
+                'Holder: ${_lastEvent!.holder}',
                 textAlign: TextAlign.center,
               )
             else
-              const Text('Нет данных'),
+              const Text('No data'),
           ],
         ),
       ),
@@ -92,26 +89,33 @@ class _CardScannerModalState extends State<CardScannerModal> {
   );
 
   bool isProcessed = false;
+  CardScanningEvent? _scanningEvent;
 
   @override
   Widget build(BuildContext context) {
     return Dialog.fullscreen(
       child: Stack(
         children: [
-          /// Камера + сканер
+          /// Camera + scanner
           Positioned.fill(
             child: CardScan(
+              observationsCountLimit: 10,
               bounds: bounds,
+              onScanning: (event) {
+                setState(() {
+                  _scanningEvent = event;
+                });
+              },
               onScanned: (event) {
                 if (!isProcessed) {
                   isProcessed = true;
-                  Navigator.of(context).pop(event); // вернуть ивент
+                  Navigator.of(context).pop(event); // return event
                 }
               },
             ),
           ),
 
-          /// Оверлей
+          /// Overlay
           Positioned.fill(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -127,7 +131,7 @@ class _CardScannerModalState extends State<CardScannerModal> {
 
                 return Stack(
                   children: [
-                    /// Полупрозрачная маска
+                    /// Mask
                     ColorFiltered(
                       colorFilter: ColorFilter.mode(
                         Colors.black.withOpacity(0.5),
@@ -154,7 +158,7 @@ class _CardScannerModalState extends State<CardScannerModal> {
                       ),
                     ),
 
-                    /// Белая рамка
+                    /// White frame
                     Positioned.fromRect(
                       rect: rect,
                       child: Container(
@@ -165,14 +169,14 @@ class _CardScannerModalState extends State<CardScannerModal> {
                       ),
                     ),
 
-                    /// Подсказка
+                    /// Hint
                     Positioned(
                       top: rect.top - 60,
                       left: 0,
                       right: 0,
                       child: const Center(
                         child: Text(
-                          'Наведите карту в рамку',
+                          'Put the card in the frame',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -181,6 +185,32 @@ class _CardScannerModalState extends State<CardScannerModal> {
                         ),
                       ),
                     ),
+
+                    /// Real-time scanning info
+                    if (_scanningEvent != null)
+                      Positioned(
+                        bottom: 40,
+                        left: 20,
+                        right: 20,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Scanning...\n'
+                            'Card: ${_scanningEvent!.number ?? "-"}\n'
+                            'Exp: ${_scanningEvent!.expDate ?? "-"}\n'
+                            'Holder: ${_scanningEvent!.holder ?? "-"}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
                   ],
                 );
               },

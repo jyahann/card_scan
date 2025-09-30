@@ -3,12 +3,15 @@ import UIKit
 typealias StringRecognition = (text: String, rect: CGRect?)
 
 class StringTracker {
-    
-    private static let Threshold = 2
+    private let threshold: Int
     
     var frameIndex: Int64 = 0
 
     typealias StringObservation = (lastSeen: Int64, count: Int64, box: CGRect?)
+
+    public init(threshold: Int) {
+        self.threshold = threshold
+    }
     
     // Dictionary of seen strings. Used to get stable recognition before
     // displaying anything.
@@ -71,7 +74,7 @@ class StringTracker {
     
     func getStableString() -> String? {
         // Require the recognizer to see the same string at least "Threshold" times.
-        if bestCount >= StringTracker.Threshold {
+        if bestCount >= self.threshold {
             return bestString
         } else {
             return nil
@@ -88,7 +91,7 @@ class StringTracker {
     
     func getStableBox() -> CGRect? {
         // Require the recognizer to see the same string at least "Threshold" times.
-        if bestCount >= StringTracker.Threshold {
+        if bestCount >= self.threshold {
             return bestBox
         } else {
             return nil

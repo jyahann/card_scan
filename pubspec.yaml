@@ -1,7 +1,7 @@
 name: card_scan
-description: "A new Flutter plugin project."
-version: 0.0.1
-homepage:
+description: "A Flutter plugin for card scanning."
+version: 1.0.0
+homepage: https://github.com/jyahann/card_scan
 
 environment:
   sdk: ^3.9.0

@@ -7,7 +7,6 @@ final class GoogleCardScanner {
   static Future<CardScanEvent> scan({bool testEnvironment = false}) async {
     CardScanPlatform.instance.initCallHandler();
     CardScanPlatform.instance.startGoogleScanner(testEnvironment);
-
     return CardScanPlatform.instance.events.first;
   }
 }

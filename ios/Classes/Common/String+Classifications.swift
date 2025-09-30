@@ -132,14 +132,16 @@ extension String {
             "American", "Express", "Diners", "Club", "Discover", "JCB", "Mastercard",
             "UnionPay", "VALID", "THRU", "KASPI", "GOLD",
             "VISA", "DEBIT", "CREDIT", "CARD", "BANK",
-            "VALID", "THRU", "GOOD", "MONTH", "YEAR", "BUSINESS"
+            "GOOD", "MONTH", "YEAR", "BUSINESS"
         ]
         
-        // убираем цифры, спецсимволы и "черные слова"
+        // приводим к верхнему регистру
         var cleaned = self.uppercased()
-        cleaned = cleaned.components(separatedBy: CharacterSet.decimalDigits).joined()
-        cleaned = cleaned.components(separatedBy: CharacterSet(charactersIn: "/")).joined()
         
+        // убираем всё, что не буквы и пробелы
+        cleaned = cleaned.components(separatedBy: CharacterSet.letters.union(.whitespaces).inverted).joined()
+        
+        // вырезаем "черные слова"
         blacklist.forEach { word in
             cleaned = cleaned.replacingOccurrences(of: word.uppercased(), with: "")
         }
@@ -150,6 +152,7 @@ extension String {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         
+        // должно быть минимум имя + фамилия
         guard parts.count >= 2 else { return nil }
         
         let firstName = parts[0].capitalized

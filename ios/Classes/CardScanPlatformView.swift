@@ -19,12 +19,34 @@ class CardScanViewFactory: NSObject, FlutterPlatformViewFactory {
         guard let bounds = CardScanBounds(from: args) else {
             fatalError("Invalid CardScanBounds params from Flutter")
         }
+        
+        guard let args = args as? [String: Any] else {
+            fatalError("Invalid arguments from Flutter")
+        }
+
+        guard let observationsCountLimit = args["observationsCountLimit"] as? Int else {
+            fatalError("Invalid observationsCountLimit params from Flutter")
+        }
+        guard let cardNumberThreshold = args["cardNumberThreshold"] as? Int else {
+            fatalError("Invalid cardNumberThreshold params from Flutter")
+        }
+        guard let cardExpiryThreshold = args["cardExpiryThreshold"] as? Int else {
+            fatalError("Invalid cardExpiryThreshold params from Flutter")
+        }
+        guard let cardHolderThreshold = args["cardHolderThreshold"] as? Int else {
+            fatalError("Invalid cardHolderThreshold params from Flutter")
+        }
+
 
         return CardScanPlatformView(
             frame: frame,
             viewIdentifier: viewId,
             arguments: args,
             bounds: bounds,
+            observationsCountLimit: observationsCountLimit,
+            cardNumberThreshold: cardNumberThreshold,
+            cardExpiryThreshold: cardExpiryThreshold,
+            cardHolderThreshold: cardHolderThreshold,
             messenger: messenger)
     }
 
@@ -38,6 +60,10 @@ class CardScanPlatformView: NSObject, FlutterPlatformView {
     private var containerView: UIView
     private var hostingController: UIHostingController<CardScanView>?
     private let bounds: CardScanBounds
+    private let observationsCountLimit: Int
+    private let cardNumberThreshold: Int
+    private let cardExpiryThreshold: Int
+    private let cardHolderThreshold: Int
     private let channel: FlutterMethodChannel
 
     init(
@@ -45,10 +71,18 @@ class CardScanPlatformView: NSObject, FlutterPlatformView {
         viewIdentifier viewId: Int64,
         arguments args: Any?,
         bounds: CardScanBounds,
+        observationsCountLimit: Int,
+        cardNumberThreshold: Int,
+        cardExpiryThreshold: Int,
+        cardHolderThreshold: Int,
         messenger: FlutterBinaryMessenger
     ) {
         self.bounds = bounds
         self.channel = FlutterMethodChannel(name: "jyahann:card_scan_channel", binaryMessenger: messenger)
+        self.observationsCountLimit = observationsCountLimit
+        self.cardNumberThreshold = cardNumberThreshold
+        self.cardExpiryThreshold = cardExpiryThreshold
+        self.cardHolderThreshold = cardHolderThreshold
 
         // создаём контейнер с нужным фреймом
         containerView = UIView(frame: frame)
@@ -76,6 +110,10 @@ class CardScanPlatformView: NSObject, FlutterPlatformView {
         // Создаём SwiftUI-вью
         let swiftUIView = CardScanView(
             bounds: bounds,
+            observationsCountLimit: observationsCountLimit,
+            cardNumberThreshold: cardNumberThreshold,
+            cardExpiryThreshold: cardExpiryThreshold,
+            cardHolderThreshold: cardHolderThreshold,
             channel: channel
         )
 

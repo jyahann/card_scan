@@ -1,6 +1,7 @@
 import UIKit
 import Vision
 import CoreHaptics
+import Flutter
 
 protocol CardScannerDelegate: AnyObject {
     
@@ -20,7 +21,17 @@ public class CardScannerController : VisionController {
         return CardOverlayView.self
     }
 
-    override init(configuration: CardScanner.Configuration) {
+    private let channel: FlutterMethodChannel
+
+    let numberTracker: StringTracker
+    let expDateTracker: StringTracker
+    let fullNameTracker: StringTracker
+
+    init(configuration: CardScanner.Configuration, channel: FlutterMethodChannel) {
+        self.channel = channel
+        self.numberTracker = StringTracker(threshold: configuration.cardNumberThreshold)
+        self.expDateTracker = StringTracker(threshold: configuration.cardExpiryThreshold)
+        self.fullNameTracker = StringTracker(threshold: configuration.cardHolderThreshold)
         super.init(configuration: configuration)
     }
 
@@ -30,8 +41,6 @@ public class CardScannerController : VisionController {
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
     }
     
     
@@ -48,9 +57,7 @@ public class CardScannerController : VisionController {
     var firstNameSuggestion: String = ""
     var lastNameSuggestion: String = ""
 
-    let numberTracker = StringTracker()
-    let expDateTracker = StringTracker()
-    let fullNameTracker = StringTracker()
+    
     
     var foundNumber : String?
     var foundExpDate : String?
@@ -163,7 +170,16 @@ public class CardScannerController : VisionController {
     
     private func shouldStopScanner() {
         
-        if foundNumber != nil && ((foundExpDate != nil && foundCardHolder != nil) || (observationsCount > 4) ) {
+        channel.invokeMethod("cardScanning", arguments: [
+            "type": "cardScanning",
+            "data": [
+                "cardNumber": foundNumber ?? numberTracker.getConsensusString(),
+                "expiryDate": foundExpDate ?? expDateTracker.getConsensusString(),
+                "cardHolder": foundCardHolder ?? fullNameTracker.getConsensusString()
+            ]
+        ])
+        
+        if foundNumber != nil && ((foundExpDate != nil && foundCardHolder != nil) || (observationsCount >= self.configuration.observationsCountLimit) ) {
             
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             

@@ -107,7 +107,7 @@ class CardScanPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityA
                 }
                 .addOnFailureListener { e ->
                     Log.e(TAG, "OCR not available", e)
-                    sendErrorEvent("OCR not available: ${e.localizedMessage}")
+                    sendGoogleAccountErrorEvent()
                 }
         } catch (e: Exception) {
             Log.e(TAG, "startScan exception", e)
@@ -201,6 +201,14 @@ class CardScanPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityA
             "error" to message
         )
         Log.e(TAG, "Sending scanFailed event to Flutter: $message")
+        channel.invokeMethod("onEvent", event)
+    }
+
+    private fun sendGoogleAccountErrorEvent() {
+        val event: Map<String, Any?> = mapOf(
+            "type" to "scanGoogleAccountError"
+        )
+        Log.e(TAG, "Sending scanGoogleAccountError event to Flutter")
         channel.invokeMethod("onEvent", event)
     }
 }
