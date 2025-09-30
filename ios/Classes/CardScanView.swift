@@ -16,7 +16,7 @@ struct CardScanView: View {
                 observationsCountLimit: observationsCountLimit,
                 cardNumberThreshold: cardNumberThreshold,
                 cardExpiryThreshold: cardExpiryThreshold,
-                cardHolderThreshold: cardHolderThreshold,
+                cardHolderThreshold: cardHolderThreshold
             ),
             channel: channel
 
