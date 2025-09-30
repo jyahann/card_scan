@@ -11,17 +11,6 @@ Supports **Android** (Google Pay OCR API) and **iOS** (native SwiftUI scanner).
 
 ---
 
-## 📦 Installation
-
-Add to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  card_scan: ^1.0.1
-```
-
----
-
 ## ⚙️ Setup
 
 ### Android
