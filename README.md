@@ -1,4 +1,4 @@
-# 📱 Card Scan Flutter Plugin
+# Card Scan Flutter Plugin
 
 Flutter plugin for **scanning credit/debit cards** directly in your app.  
 Supports **Android** (Google Pay OCR API) and **iOS** (native SwiftUI scanner).
@@ -26,13 +26,12 @@ dependencies:
 
 ### Android
 
-- Minimum `minSdkVersion`: **24**
 - Connect Google Pay API for test or production
 - Ensure Google account signed in on device
 
 ### iOS
 
-- Minimum iOS version: **14.0**
+- Minimum iOS version: **13.0**
 - Add camera permission in `Info.plist`:
 
 ```xml
@@ -48,19 +47,18 @@ dependencies:
 import 'dart:io';
 import 'package:card_scan/card_scan.dart';
 
-// Android example
+// Android usage example
 if (Platform.isAndroid) {
   final result = await GoogleCardScanner.scan(testEnvironment: true);
   print(result?.number);
 }
 
-// iOS example
+// iOS camera view example
 Stack(
   children: [
     /// Camera + scanner
     Positioned.fill(
       child: CardScan(
-        bounds: bounds,
         onScanned: (event) {
           if (!isProcessed) {
             isProcessed = true;
@@ -69,13 +67,15 @@ Stack(
         },
       ),
     ),
+
+    // Custom overlay here
   ],
 )
 
 ```
 
 - `GoogleCardScanner.scan()` — Android OCR using Google Pay
-- `CardScannerModal` — iOS SwiftUI scanner modal
+- `CardScannerModal` — iOS SwiftUI camera view
 
 ---
 
